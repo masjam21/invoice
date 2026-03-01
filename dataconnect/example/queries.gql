@@ -1,0 +1,62 @@
+query ListUsers @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  users {
+    id
+    businessName
+    email
+    createdAt
+  }
+}
+
+query GetInvoiceDetails($invoiceId: UUID!) @auth(level: USER) {
+  invoice(id: $invoiceId, key: {id: $invoiceId}) {
+    id
+    invoiceNumber
+    issueDate
+    dueDate
+    totalAmount
+    status
+    client {
+      clientName
+      contactPerson
+      email
+    }
+    lineItems {
+      descriptionOverride
+      quantity
+      unitPrice
+      subtotal
+      productService {
+        name
+        price
+      }
+    }
+  }
+}
+
+mutation CreateClient($clientName: String!, $contactPerson: String, $email: String, $phoneNumber: String, $address: String) @auth(level: USER) {
+  client_insert(data: {
+    userId_expr: "auth.uid",
+    clientName: $clientName,
+    contactPerson: $contactPerson,
+    email: $email,
+    phoneNumber: $phoneNumber,
+    address: $address,
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}
+
+mutation UpdateProductService($productServiceId: UUID!, $name: String, $price: Float, $description: String, $currency: String) @auth(level: USER) {
+  productService_update(
+    key: {id: $productServiceId},
+    data: {
+      name: $name,
+      price: $price,
+      description: $description,
+      currency: $currency
+    }
+  ) {
+    id
+  }
+}

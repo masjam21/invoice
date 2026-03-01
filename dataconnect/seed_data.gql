@@ -1,0 +1,92 @@
+mutation SeedData @transaction @auth(level: USER, insecureReason: "Seed data operations are usually performed by admins or during development, and this operation is safe for all logged-in users to perform.") {
+  user_insertMany(data: [
+    {
+      id: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      businessName: "Acme Corp",
+      createdAt: "2023-01-01T00:00:00Z",
+      contactPerson: "John Doe",
+      email: "john.doe@acmecorp.com",
+      phoneNumber: "555-123-4567",
+      address: "123 Main St, Anytown, USA",
+      logoUrl: "https://example.com/acme-logo.png",
+      defaultPaymentTerms: "NET30"
+    },
+    {
+      id: "b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2",
+      businessName: "Globex Inc",
+      createdAt: "2023-02-01T00:00:00Z",
+      contactPerson: "Jane Smith",
+      email: "jane.smith@globex.com",
+      phoneNumber: "555-987-6543",
+      address: "456 Oak Ave, Otherville, USA",
+      logoUrl: "https://example.com/globex-logo.png",
+      defaultPaymentTerms: "DUEONRECEIPT"
+    }
+  ])
+  client_insertMany(data: [
+    {
+      id: "c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3",
+      userId: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      clientName: "Client A",
+      createdAt: "2023-03-01T00:00:00Z",
+      contactPerson: "Alice Brown",
+      email: "alice.brown@clienta.com",
+      phoneNumber: "555-111-2222",
+      address: "789 Pine Ln, Somewhere, USA"
+    },
+    {
+      id: "d4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4",
+      userId: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      clientName: "Client B",
+      createdAt: "2023-03-05T00:00:00Z",
+      contactPerson: "Bob Green",
+      email: "bob.green@clientb.com",
+      phoneNumber: "555-333-4444",
+      address: "101 Maple Rd, Anywhere, USA"
+    }
+  ])
+  productService_insertMany(data: [
+    {
+      id: "e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5",
+      userId: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      name: "Consulting Services",
+      price: 150.00,
+      createdAt: "2023-01-10T00:00:00Z",
+      description: "Hourly consulting services.",
+      currency: "USD"
+    },
+    {
+      id: "f6f6f6f6-f6f6-4f6f-8f6f-f6f6f6f6f6f6",
+      userId: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      name: "Software License",
+      price: 999.99,
+      createdAt: "2023-01-15T00:00:00Z",
+      description: "Annual software license.",
+      currency: "USD"
+    }
+  ])
+  invoice_insertMany(data: [
+    {
+      id: "g7g7g7g7-g7g7-4g7g-8g7g-g7g7g7g7g7g7",
+      userId: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1",
+      clientId: "c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3",
+      invoiceNumber: "INV-2023-001",
+      issueDate: "2023-03-10",
+      dueDate: "2023-04-09",
+      totalAmount: 300.00,
+      status: "PENDING",
+      createdAt: "2023-03-10T00:00:00Z",
+      updatedAt: "2023-03-10T00:00:00Z",
+      paymentTerms: "NET30"
+    }
+  ])
+  lineItem_insertMany(data: [
+    {
+      invoiceId: "g7g7g7g7-g7g7-4g7g-8g7g-g7g7g7g7g7g7",
+      productServiceId: "e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5",
+      quantity: 2,
+      unitPrice: 150.00,
+      subtotal: 300.00
+    }
+  ])
+}

@@ -1,0 +1,52 @@
+type User @table {
+  businessName: String!
+  createdAt: Timestamp!
+  contactPerson: String
+  email: String
+  phoneNumber: String
+  address: String
+  logoUrl: String
+  defaultPaymentTerms: String
+}
+
+type Client @table {
+  user: User!
+  clientName: String!
+  createdAt: Timestamp!
+  contactPerson: String
+  email: String
+  phoneNumber: String
+  address: String
+}
+
+type ProductService @table {
+  user: User!
+  name: String!
+  price: Float!
+  createdAt: Timestamp!
+  description: String
+  currency: String
+}
+
+type Invoice @table {
+  user: User!
+  client: Client!
+  invoiceNumber: String!
+  issueDate: Date!
+  dueDate: Date!
+  totalAmount: Float!
+  status: String! # DRAFT, SENT, PAID, OVERDUE
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  notes: String
+  paymentTerms: String
+}
+
+type LineItem @table {
+  invoice: Invoice!
+  productService: ProductService
+  quantity: Int!
+  unitPrice: Float!
+  subtotal: Float!
+  descriptionOverride: String
+}
