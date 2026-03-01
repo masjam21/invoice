@@ -383,10 +383,10 @@ export default function App() {
             </div>
 
             {/* Receipt Container */}
-            <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative">
-              <div className="text-center mb-4 print:mb-2">
+            <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative print:mt-0">
+              <div className="text-center mb-4 print:mb-0 print:pb-0">
                 <input
-                  className="text-3xl print:text-base font-black text-center w-full outline-none uppercase tracking-tighter mb-1 bg-transparent border-none"
+                  className="text-3xl print:text-base font-black text-center w-full outline-none uppercase tracking-tighter mb-1 print:mb-0 print:mt-0 bg-transparent border-none"
                   value={currentInvoice?.companyName}
                   onChange={(e) =>
                     setCurrentInvoice({
@@ -396,7 +396,7 @@ export default function App() {
                   }
                 />
                 <textarea
-                  className="text-[11px] print:text-[9px] font-bold text-center w-full outline-none h-10 print:h-8 resize-none leading-none text-slate-500 print:text-black italic border-none bg-transparent overflow-hidden"
+                  className="text-[11px] print:text-[9px] font-bold text-center w-full outline-none h-10 print:h-8 resize-none leading-none text-slate-500 print:text-black italic border-none bg-transparent overflow-hidden print:mb-0"
                   value={currentInvoice?.companyAddress}
                   onChange={(e) =>
                     setCurrentInvoice({
@@ -407,9 +407,9 @@ export default function App() {
                 />
               </div>
 
-              <div className="border-t border-dashed border-slate-300 my-3 print:my-1 print:border-black"></div>
+              <div className="border-t border-dashed border-slate-300 my-3 print:my-0 print:border-black"></div>
 
-              <div className="text-[11px] font-bold space-y-1 mb-3 print:mb-2">
+              <div className="text-[11px] font-bold space-y-1 print:space-y-0 mb-3 print:mb-0.5 mt-2 print:mt-0">
                 <div className="flex justify-between">
                   <span className="text-slate-300 print:text-black uppercase">
                     NO STRUK :
