@@ -9,6 +9,7 @@ import {
   Search,
   ReceiptText,
   ChevronLeft,
+  Settings,
 } from "lucide-react";
 
 /**
@@ -22,21 +23,40 @@ import {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
-  const [view, setView] = useState("list");
+  const [view, setView] = useState("list"); // 'list' | 'editor' | 'settings'
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [message, setMessage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [printMode, setPrintMode] = useState("thermal");
+
+  // State untuk Info Toko
+  const [storeInfo, setStoreInfo] = useState({
+    name: "USAHA ANDA",
+    address: "Alamat Bisnis Anda",
+    defaultNotes: "Terima kasih atas kunjungan Anda!",
+  });
 
   // Muat data lokal
   useEffect(() => {
     const savedData = localStorage.getItem("kasir_pro_v3_final");
+    const savedStore = localStorage.getItem("kasir_pro_store_info");
+    
     if (savedData) {
       try {
         setInvoices(JSON.parse(savedData));
       } catch (e) {
-        console.error("Gagal memuat data");
+        console.error("Gagal memuat data struk");
       }
     }
+    
+    if (savedStore) {
+      try {
+        setStoreInfo(JSON.parse(savedStore));
+      } catch (e) {
+        console.error("Gagal memuat profil toko");
+      }
+    }
+    
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -48,6 +68,12 @@ export default function App() {
     }
   }, [invoices, loading]);
 
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem("kasir_pro_store_info", JSON.stringify(storeInfo));
+    }
+  }, [storeInfo, loading]);
+
   const showMsg = (text, type = "success") => {
     setMessage({ text: String(text), type });
     setTimeout(() => setMessage(null), 3000);
@@ -58,10 +84,10 @@ export default function App() {
       id: `TRX-${Date.now().toString().slice(-6)}`,
       date: new Date().toISOString().split("T")[0],
       clientName: "",
-      companyName: "USAHA ANDA",
-      companyAddress: "Alamat Bisnis Anda",
+      companyName: storeInfo.name,
+      companyAddress: storeInfo.address,
       items: [{ id: Date.now(), description: "", qty: 1, price: 0 }],
-      notes: "Terima kasih atas kunjungan Anda!",
+      notes: storeInfo.defaultNotes,
       updatedAt: new Date().toISOString(),
     };
     setCurrentInvoice(newInv);
@@ -143,17 +169,29 @@ export default function App() {
           <div className="bg-black p-1.5 rounded text-white">
             <LayoutDashboard size={18} />
           </div>
-          <h1 className="text-sm font-black uppercase tracking-tighter leading-none">
+          <h1 className="text-sm font-black uppercase tracking-tighter leading-none hidden sm:block">
             KASIR<span className="text-blue-600">PRO</span>
           </h1>
         </div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">
-          Offline Terminal v3.0
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setView("list")}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'list' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            <History size={14} /> <span className="hidden sm:inline">Riwayat</span>
+          </button>
+          <button 
+            onClick={() => setView("settings")}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'settings' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            <Settings size={14} /> <span className="hidden sm:inline">Toko</span>
+          </button>
         </div>
       </nav>
 
       <main className="max-w-6xl mx-auto p-4 md:p-10">
-        {view === "list" ? (
+        {view === "list" && (
           /* --- DASHBOARD --- */
           <div className="animate-in fade-in">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
@@ -241,7 +279,66 @@ export default function App() {
               )}
             </div>
           </div>
-        ) : (
+        )}
+        
+        {view === "settings" && (
+          /* --- PENGATURAN TOKO --- */
+          <div className="animate-in fade-in max-w-2xl mx-auto">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-8 italic">
+              Profil Toko
+            </h2>
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-6">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Nama Toko
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold uppercase"
+                  value={storeInfo.name}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, name: e.target.value })}
+                  placeholder="Masukkan nama toko"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Alamat Toko
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none h-24"
+                  value={storeInfo.address}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })}
+                  placeholder="Masukkan alamat lengkap"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Catatan Kaki Default (Terima kasih, dsb)
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none italic h-24"
+                  value={storeInfo.defaultNotes}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, defaultNotes: e.target.value })}
+                  placeholder="Catatan di bawah struk"
+                />
+              </div>
+              
+              <div className="pt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                     showMsg("Profil toko berhasil disimpan!");
+                     setView("list");
+                  }}
+                  className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                >
+                  <Save size={16} /> SIMPAN PERUBAHAN
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {view === "editor" && (
           /* --- EDITOR STRUK --- */
           <div className="animate-in fade-in max-w-xl mx-auto">
             <div className="mb-8 flex flex-wrap gap-3 no-print items-center">
@@ -252,6 +349,14 @@ export default function App() {
                 <ChevronLeft size={20} />
               </button>
               <div className="flex-1"></div>
+              <select
+                className="bg-white border border-slate-200 text-slate-500 text-[10px] font-bold p-3 rounded-xl outline-none no-print shadow-sm"
+                value={printMode}
+                onChange={(e) => setPrintMode(e.target.value)}
+              >
+                <option value="thermal">Thermal (58mm)</option>
+                <option value="a5">PDF A5</option>
+              </select>
               <button
                 onClick={saveInvoice}
                 className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"
@@ -259,7 +364,18 @@ export default function App() {
                 SIMPAN
               </button>
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  const originalTitle = document.title;
+                  document.title = (currentInvoice?.id || "STRUK").replace(
+                    /\//g,
+                    "-",
+                  );
+                  // Allow React to re-render any class changes if needed (not strictly necessary for CSS @page if injected via style block, but good practice).
+                  setTimeout(() => {
+                    window.print();
+                    document.title = originalTitle;
+                  }, 100);
+                }}
                 className="bg-black text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
               >
                 <Printer size={16} /> CETAK
@@ -270,7 +386,7 @@ export default function App() {
             <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative">
               <div className="text-center mb-4 print:mb-2">
                 <input
-                  className="text-3xl print:text-xl font-black text-center w-full outline-none uppercase tracking-tighter mb-1 bg-transparent border-none"
+                  className="text-3xl print:text-base font-black text-center w-full outline-none uppercase tracking-tighter mb-1 bg-transparent border-none"
                   value={currentInvoice?.companyName}
                   onChange={(e) =>
                     setCurrentInvoice({
@@ -316,7 +432,7 @@ export default function App() {
                     }
                   />
                 </div>
-                <div className="flex justify-between border-t border-dotted border-slate-100 pt-3 mt-2 print:border-black">
+                <div className="flex justify-between border-t border-dotted border-slate-100 pt-3 mt-2 print:pt-1 print:mt-1 print:border-black">
                   <span className="text-slate-300 print:text-black uppercase">
                     PELANGGAN :
                   </span>
@@ -335,16 +451,16 @@ export default function App() {
               </div>
 
               {/* Items Table - Perbaikan Kolom QTY (Ramping) */}
-              <div className="border-y-2 border-dashed border-black py-4 mb-8">
+              <div className="border-y-2 border-dashed border-black py-4 print:py-1 mb-8 print:mb-2">
                 <table
-                  className="w-full text-[11px] leading-relaxed border-collapse"
+                  className="w-full text-[11px] print:text-[9px] leading-tight print:leading-none border-collapse"
                   style={{ tableLayout: "fixed" }}
                 >
                   <thead>
-                    <tr className="text-left font-black uppercase border-b border-dotted border-slate-200 mb-4 print:border-black">
-                      <th className="pb-4">ITEM</th>
-                      <th className="pb-4 text-center w-12">QTY</th>
-                      <th className="pb-4 text-right w-24">TOTAL</th>
+                    <tr className="text-left font-black uppercase border-b border-dotted border-slate-200 mb-2 print:mb-1 print:border-black">
+                      <th className="pb-2 print:pb-1">ITEM</th>
+                      <th className="pb-2 print:pb-1 text-center w-10">QTY</th>
+                      <th className="pb-2 print:pb-1 text-right w-20">TOTAL</th>
                     </tr>
                   </thead>
                   <tbody className="font-bold">
@@ -353,7 +469,7 @@ export default function App() {
                         key={item.id}
                         className="align-top border-b border-dotted border-slate-50 last:border-none print:border-black"
                       >
-                        <td className="py-4 pr-2">
+                        <td className="py-2 print:py-1 pr-1">
                           <input
                             className="w-full outline-none bg-transparent placeholder:text-slate-200 font-bold uppercase truncate"
                             value={item.description}
@@ -370,11 +486,11 @@ export default function App() {
                               setCurrentInvoice({ ...currentInvoice, items });
                             }}
                           />
-                          <div className="text-[10px] text-slate-400 font-normal mt-1 italic">
+                          <div className="text-[10px] print:text-[8px] text-slate-400 font-normal mt-0.5 print:mt-0 italic">
                             @ {item.price.toLocaleString("id-ID")}
                           </div>
                         </td>
-                        <td className="py-4 px-0 text-center w-12">
+                        <td className="py-2 print:py-1 px-0 text-center w-10">
                           <input
                             type="number"
                             className="w-full text-center bg-slate-50 p-1 rounded-md no-print outline-none font-bold"
@@ -392,7 +508,7 @@ export default function App() {
                             {item.qty}
                           </span>
                         </td>
-                        <td className="py-4 pl-2 text-right relative group w-24">
+                        <td className="py-2 print:py-1 pl-1 text-right relative group w-20">
                           <div className="flex items-center justify-end gap-1">
                             <span className="tracking-tighter font-black text-slate-800 print:text-black">
                               {(item.qty * item.price).toLocaleString("id-ID")}
@@ -412,7 +528,7 @@ export default function App() {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <div className="no-print mt-2">
+                          <div className="no-print mt-1">
                             <input
                               type="number"
                               className="w-full text-right text-[9px] outline-none bg-slate-100 rounded p-1"
@@ -451,21 +567,21 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="space-y-2 mb-8 font-black text-[12px] italic">
+              <div className="space-y-1 mb-4 print:mb-2 font-black text-[12px] print:text-[10px] italic">
                 <div className="flex justify-between uppercase text-slate-400 print:text-black">
                   <span>SUBTOTAL:</span>
                   <span>{totals.subtotal.toLocaleString("id-ID")}</span>
                 </div>
-                <div className="flex justify-between text-4xl pt-6 border-t-4 border-double border-black not-italic tracking-tighter">
-                  <span className="text-[10px] font-black uppercase tracking-widest self-center">
+                <div className="flex justify-between text-4xl print:text-xl pt-4 print:pt-1 border-t-4 border-double border-black not-italic tracking-tighter">
+                  <span className="text-[10px] print:text-[9px] font-black uppercase tracking-widest self-center">
                     TOTAL
                   </span>
                   <span>{totals.subtotal.toLocaleString("id-ID")}</span>
                 </div>
               </div>
 
-              <div className="text-center text-[10px] space-y-6 mt-12">
-                <div className="border-t border-dashed border-slate-300 pt-6 print:border-black"></div>
+              <div className="text-center text-[10px] print:text-[8px] space-y-4 print:space-y-2 mt-8 print:mt-4">
+                <div className="border-t border-dashed border-slate-300 pt-4 print:pt-2 print:border-black"></div>
                 <textarea
                   className="w-full text-center outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print"
                   value={currentInvoice?.notes}
@@ -477,11 +593,11 @@ export default function App() {
                     })
                   }
                 />
-                <div className="hidden print:block text-center italic font-bold text-[10px] mb-8 leading-tight">
+                <div className="hidden print:block text-center italic font-bold text-[8px] mb-4 print:mb-2 leading-tight">
                   {currentInvoice?.notes}
                 </div>
-                <div className="uppercase font-black tracking-[0.5em] text-slate-300 print:text-black py-4">
-                  *** TERIMA KASIH ***
+                <div className="uppercase font-black tracking-[0.3em] print:tracking-widest text-slate-300 print:text-black py-2 print:py-1">
+                  *** TERIMAKASIH ATAS KEPERCAYAAN ANDA ***
                 </div>
               </div>
             </div>
@@ -510,6 +626,11 @@ export default function App() {
         @media print {
           .no-print { display: none !important; }
           body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
+          
+          ${
+            printMode === "thermal"
+              ? `
+          /* THERMAL 58mm */
           .receipt-paper { 
             width: 58mm !important; 
             max-width: 58mm !important; 
@@ -519,8 +640,23 @@ export default function App() {
             border: none !important;
             font-family: 'Courier New', monospace !important;
           }
-          * { color: black !important; border-color: black !important; }
           @page { margin: 0; size: 58mm auto; }
+          `
+              : `
+          /* A5 PORTRAIT */
+          .receipt-paper {
+            width: 100% !important;
+            max-width: 148mm !important; /* A5 Width */
+            margin: 0 auto !important;
+            padding: 15mm !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          @page { margin: 0; size: A5 portrait; }
+          `
+          }
+
+          * { color: black !important; border-color: black !important; }
         }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
