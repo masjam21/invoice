@@ -268,9 +268,9 @@ export default function App() {
 
             {/* Receipt Container */}
             <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative">
-              <div className="text-center mb-8">
+              <div className="text-center mb-4 print:mb-2">
                 <input
-                  className="text-3xl font-black text-center w-full outline-none uppercase tracking-tighter mb-2 bg-transparent border-none"
+                  className="text-3xl print:text-xl font-black text-center w-full outline-none uppercase tracking-tighter mb-1 bg-transparent border-none"
                   value={currentInvoice?.companyName}
                   onChange={(e) =>
                     setCurrentInvoice({
@@ -280,7 +280,7 @@ export default function App() {
                   }
                 />
                 <textarea
-                  className="text-[11px] font-bold text-center w-full outline-none h-12 resize-none leading-tight text-slate-500 italic border-none bg-transparent"
+                  className="text-[11px] print:text-[9px] font-bold text-center w-full outline-none h-10 print:h-8 resize-none leading-none text-slate-500 print:text-black italic border-none bg-transparent overflow-hidden"
                   value={currentInvoice?.companyAddress}
                   onChange={(e) =>
                     setCurrentInvoice({
@@ -291,9 +291,9 @@ export default function App() {
                 />
               </div>
 
-              <div className="border-t border-dashed border-slate-300 my-6 print:border-black"></div>
+              <div className="border-t border-dashed border-slate-300 my-3 print:my-1 print:border-black"></div>
 
-              <div className="text-[11px] font-bold space-y-2 mb-6">
+              <div className="text-[11px] font-bold space-y-1 mb-3 print:mb-2">
                 <div className="flex justify-between">
                   <span className="text-slate-300 print:text-black uppercase">
                     NO STRUK :
@@ -509,17 +509,18 @@ export default function App() {
 
         @media print {
           .no-print { display: none !important; }
-          body { background-color: white !important; padding: 0 !important; }
+          body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
           .receipt-paper { 
-            width: 100% !important; 
-            max-width: 320px !important; 
-            margin: 0 auto !important; 
+            width: 58mm !important; 
+            max-width: 58mm !important; 
+            margin: 0 !important; 
+            padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
             font-family: 'Courier New', monospace !important;
           }
           * { color: black !important; border-color: black !important; }
-          @page { margin: 0; size: auto; }
+          @page { margin: 0; size: 58mm auto; }
         }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
