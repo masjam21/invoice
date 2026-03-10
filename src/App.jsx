@@ -10,6 +10,9 @@ import {
   ReceiptText,
   ChevronLeft,
   Settings,
+  Package,
+  X,
+  Edit,
 } from "lucide-react";
 
 /**
@@ -23,10 +26,14 @@ import {
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
-  const [view, setView] = useState("list"); // 'list' | 'editor' | 'settings'
+  const [items, setItems] = useState([]); // Database barang
+  const [view, setView] = useState("list"); // 'list' | 'editor' | 'settings' | 'items'
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [message, setMessage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [itemSearchTerm, setItemSearchTerm] = useState("");
+  const [editingItem, setEditingItem] = useState(null);
+  const [showItemSelector, setShowItemSelector] = useState(null);
   const [printMode, setPrintMode] = useState("thermal");
 
   // State untuk Info Toko
@@ -40,12 +47,21 @@ export default function App() {
   useEffect(() => {
     const savedData = localStorage.getItem("kasir_pro_v3_final");
     const savedStore = localStorage.getItem("kasir_pro_store_info");
+    const savedItems = localStorage.getItem("kasir_pro_items");
     
     if (savedData) {
       try {
         setInvoices(JSON.parse(savedData));
       } catch (e) {
         console.error("Gagal memuat data struk");
+      }
+    }
+
+    if (savedItems) {
+      try {
+        setItems(JSON.parse(savedItems));
+      } catch (e) {
+        console.error("Gagal memuat data barang");
       }
     }
     
@@ -73,6 +89,12 @@ export default function App() {
       localStorage.setItem("kasir_pro_store_info", JSON.stringify(storeInfo));
     }
   }, [storeInfo, loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem("kasir_pro_items", JSON.stringify(items));
+    }
+  }, [items, loading]);
 
   const showMsg = (text, type = "success") => {
     setMessage({ text: String(text), type });
@@ -123,6 +145,31 @@ export default function App() {
     }
   };
 
+  const saveItem = (item) => {
+    if (!item.name || !item.price) {
+      showMsg("Nama dan harga harus diisi!", "error");
+      return;
+    }
+    const newItemList = [...items];
+    const index = newItemList.findIndex(i => i.id === item.id);
+    if (index >= 0) {
+      newItemList[index] = item;
+      showMsg("Barang diperbarui!");
+    } else {
+      newItemList.unshift({ ...item, id: Date.now() });
+      showMsg("Barang ditambah!");
+    }
+    setItems(newItemList);
+    setEditingItem(null);
+  };
+
+  const deleteItem = (id) => {
+    if (window.confirm("Hapus barang ini dari database?")) {
+      setItems(items.filter(i => i.id !== id));
+      showMsg("Barang dihapus", "error");
+    }
+  };
+
   const totals = useMemo(() => {
     if (!currentInvoice || !currentInvoice.items) return { subtotal: 0 };
     return {
@@ -137,6 +184,11 @@ export default function App() {
     (inv) =>
       (inv.clientName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (inv.id || "").toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const filteredItems = items.filter(
+    (item) =>
+      (item.name || "").toLowerCase().includes(itemSearchTerm.toLowerCase()),
   );
 
   if (loading) {
@@ -180,6 +232,12 @@ export default function App() {
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'list' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <History size={14} /> <span className="hidden sm:inline">Riwayat</span>
+          </button>
+          <button 
+            onClick={() => setView("items")}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'items' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            <Package size={14} /> <span className="hidden sm:inline">Barang</span>
           </button>
           <button 
             onClick={() => setView("settings")}
@@ -337,6 +395,137 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {view === "items" && (
+          /* --- DATABASE BARANG --- */
+          <div className="animate-in fade-in">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+              <div className="w-full md:w-auto">
+                <h2 className="text-5xl font-black uppercase tracking-tighter mb-6 italic">
+                  Database Barang
+                </h2>
+                <div className="relative w-full md:w-96">
+                  <Search
+                    className="absolute left-3 top-3 text-slate-300"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Cari barang..."
+                    className="w-full bg-white border border-slate-200 p-3 pl-10 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all text-sm font-bold"
+                    value={itemSearchTerm}
+                    onChange={(e) => setItemSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingItem({ name: "", price: 0 })}
+                className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+              >
+                <Plus size={18} /> Tambah Barang Baru
+              </button>
+            </div>
+
+            {editingItem && (
+              /* Modal Form Barang */
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-6 italic">
+                    {editingItem.id ? 'Edit Barang' : 'Tambah Barang'}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Nama Barang</label>
+                      <input
+                        type="text"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold uppercase"
+                        value={editingItem.name}
+                        onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value.toUpperCase() })}
+                        placeholder="Contoh: BERAS PREMIUM 5KG"
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Harga Satuan (Rp)</label>
+                      <input
+                        type="number"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.price}
+                        onChange={(e) => setEditingItem({ ...editingItem, price: parseInt(e.target.value) || 0 })}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-8">
+                    <button
+                      onClick={() => setEditingItem(null)}
+                      className="flex-1 px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={() => saveItem(editingItem)}
+                      className="flex-1 bg-black text-white px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg"
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItems.length === 0 ? (
+                <div className="col-span-full bg-white p-20 text-center border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+                  <Package
+                    size={48}
+                    className="mx-auto text-slate-200 mb-4"
+                  />
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">
+                    Belum ada data barang.
+                  </p>
+                </div>
+              ) : (
+                filteredItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-40 group relative"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Item ID: {item.id.toString().slice(-6)}
+                        </span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="text-slate-300 hover:text-blue-600 transition-all p-1"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteItem(item.id)}
+                            className="text-slate-300 hover:text-red-500 transition-all p-1"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <h4 className="font-black text-lg uppercase tracking-tighter truncate leading-tight">
+                        {item.name}
+                      </h4>
+                    </div>
+                    <div className="pt-4 border-t border-slate-50">
+                      <div className="text-xl font-black tracking-tighter italic text-blue-600">
+                        Rp {item.price.toLocaleString("id-ID")}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
         
         {view === "editor" && (
           /* --- EDITOR STRUK --- */
@@ -384,6 +573,59 @@ export default function App() {
 
             {/* Receipt Container */}
             <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative print:mt-0">
+              
+              {showItemSelector && (
+                /* Modal Pilih Barang dari DB */
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 no-print">
+                  <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col max-h-[80vh]">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-2xl font-black uppercase tracking-tighter italic">Pilih Barang</h3>
+                      <button onClick={() => setShowItemSelector(null)} className="p-2 hover:bg-slate-100 rounded-full transition-all"><X size={20} /></button>
+                    </div>
+                    
+                    <div className="relative mb-6">
+                      <Search className="absolute left-3 top-3 text-slate-300" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Cari di database..."
+                        className="w-full bg-slate-50 border border-slate-200 p-3 pl-10 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all text-sm font-bold"
+                        value={itemSearchTerm}
+                        onChange={(e) => setItemSearchTerm(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                       {items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).length === 0 ? (
+                         <p className="text-center py-10 text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Barang tidak ditemukan.</p>
+                       ) : (
+                         items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).map(dbItem => (
+                           <button
+                             key={dbItem.id}
+                             onClick={() => {
+                               const updatedItems = currentInvoice.items.map(it => 
+                                 it.id === showItemSelector 
+                                   ? { ...it, description: dbItem.name, price: dbItem.price } 
+                                   : it
+                               );
+                               setCurrentInvoice({ ...currentInvoice, items: updatedItems });
+                               setShowItemSelector(null);
+                             }}
+                             className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-blue-600 hover:bg-blue-50 transition-all group flex justify-between items-center"
+                           >
+                             <div>
+                               <div className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600">{dbItem.name}</div>
+                               <div className="text-[10px] font-bold text-slate-400">Rp {dbItem.price.toLocaleString("id-ID")}</div>
+                             </div>
+                             <Plus size={16} className="text-slate-200 group-hover:text-blue-600" />
+                           </button>
+                         ))
+                       )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="text-center mb-4 print:mb-0 print:pb-0">
                 <input
                   className="text-3xl print:text-base font-black text-center w-full outline-none uppercase tracking-tighter mb-1 print:mb-0 print:mt-0 bg-transparent border-none"
@@ -470,22 +712,31 @@ export default function App() {
                         className="align-top border-b border-dotted border-slate-50 last:border-none print:border-black"
                       >
                         <td className="py-2 print:py-1 pr-1">
-                          <input
-                            className="w-full outline-none bg-transparent placeholder:text-slate-200 font-bold uppercase truncate"
-                            value={item.description}
-                            placeholder="NAMA BARANG"
-                            onChange={(e) => {
-                              const items = currentInvoice.items.map((i) =>
-                                i.id === item.id
-                                  ? {
-                                      ...i,
-                                      description: e.target.value.toUpperCase(),
-                                    }
-                                  : i,
-                              );
-                              setCurrentInvoice({ ...currentInvoice, items });
-                            }}
-                          />
+                          <div className="flex items-center gap-1 group/item">
+                            <input
+                              className="w-full outline-none bg-transparent placeholder:text-slate-200 font-bold uppercase truncate"
+                              value={item.description}
+                              placeholder="NAMA BARANG"
+                              onChange={(e) => {
+                                const items = currentInvoice.items.map((i) =>
+                                  i.id === item.id
+                                    ? {
+                                        ...i,
+                                        description: e.target.value.toUpperCase(),
+                                      }
+                                    : i,
+                                );
+                                setCurrentInvoice({ ...currentInvoice, items });
+                              }}
+                            />
+                            <button
+                              onClick={() => setShowItemSelector(item.id)}
+                              className="no-print opacity-0 group-hover/item:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-blue-600 flex-shrink-0"
+                              title="Pilih dari Database"
+                            >
+                              <Search size={14} />
+                            </button>
+                          </div>
                           <div className="text-[10px] print:text-[8px] text-slate-400 font-normal mt-0.5 print:mt-0 italic">
                             @ {item.price.toLocaleString("id-ID")}
                           </div>
