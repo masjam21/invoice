@@ -36,6 +36,7 @@ export default function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [showItemSelector, setShowItemSelector] = useState(null);
   const [reportTab, setReportTab] = useState("stock"); // 'stock' | 'sold' | 'profit'
+  const [autocomplete, setAutocomplete] = useState({ id: null, query: "" });
   const [printMode, setPrintMode] = useState("thermal");
 
   // State untuk Info Toko
@@ -874,24 +875,66 @@ export default function App() {
                         key={item.id}
                         className="align-top border-b border-dotted border-slate-50 last:border-none print:border-black"
                       >
-                        <td className="py-2 print:py-1 pr-1">
+                        <td className="py-2 print:py-1 pr-1 relative">
                           <div className="flex items-center gap-1 group/item">
                             <input
                               className="w-full outline-none bg-transparent placeholder:text-slate-200 font-bold uppercase truncate"
                               value={item.description}
                               placeholder="NAMA BARANG"
                               onChange={(e) => {
-                                const items = currentInvoice.items.map((i) =>
+                                const val = e.target.value.toUpperCase();
+                                const updatedItems = currentInvoice.items.map((i) =>
                                   i.id === item.id
                                     ? {
                                         ...i,
-                                        description: e.target.value.toUpperCase(),
+                                        description: val,
                                       }
                                     : i,
                                 );
-                                setCurrentInvoice({ ...currentInvoice, items });
+                                setCurrentInvoice({ ...currentInvoice, items: updatedItems });
+                                setAutocomplete({ id: item.id, query: val });
+                              }}
+                              onBlur={() => {
+                                // Delay hide so click can be registered
+                                setTimeout(() => setAutocomplete({ id: null, query: "" }), 200);
                               }}
                             />
+                            
+                            {/* Autocomplete Dropdown */}
+                            {autocomplete.id === item.id && autocomplete.query.length > 0 && (
+                              <div className="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] no-print overflow-hidden max-h-48 overflow-y-auto">
+                                {items.filter(i => i.name.toLowerCase().includes(autocomplete.query.toLowerCase())).length === 0 ? (
+                                  <div className="p-3 text-[10px] font-bold text-slate-400 italic">Tidak ada hasil...</div>
+                                ) : (
+                                  items
+                                    .filter(i => i.name.toLowerCase().includes(autocomplete.query.toLowerCase()))
+                                    .map(dbItem => (
+                                      <button
+                                        key={dbItem.id}
+                                        type="button"
+                                        className="w-full text-left p-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-none flex justify-between items-center"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault(); // Prevent blur
+                                          const updatedItems = currentInvoice.items.map(it => 
+                                            it.id === item.id 
+                                              ? { ...it, description: dbItem.name, price: dbItem.price } 
+                                              : it
+                                          );
+                                          setCurrentInvoice({ ...currentInvoice, items: updatedItems });
+                                          setAutocomplete({ id: null, query: "" });
+                                        }}
+                                      >
+                                        <div>
+                                          <div className="text-[10px] font-black uppercase">{dbItem.name}</div>
+                                          <div className="text-[9px] text-slate-400 font-bold">Stok: {dbItem.stock || 0} | Rp {dbItem.price.toLocaleString("id-ID")}</div>
+                                        </div>
+                                        <Plus size={12} className="text-blue-600" />
+                                      </button>
+                                    ))
+                                )}
+                              </div>
+                            )}
+
                             <button
                               onClick={() => setShowItemSelector(item.id)}
                               className="no-print opacity-0 group-hover/item:opacity-100 p-1 hover:bg-slate-100 rounded transition-all text-blue-600 flex-shrink-0"
