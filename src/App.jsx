@@ -526,6 +526,63 @@ export default function App() {
           </div>
         )}
 
+        {view === "settings" && (
+          /* --- PENGATURAN TOKO --- */
+          <div className="animate-in fade-in max-w-2xl mx-auto">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-8 italic">
+              Profil Toko
+            </h2>
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-6">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Nama Toko
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold uppercase"
+                  value={storeInfo.name}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, name: e.target.value.toUpperCase() })}
+                  placeholder="Masukkan nama toko"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Alamat Toko
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none h-24"
+                  value={storeInfo.address}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })}
+                  placeholder="Masukkan alamat lengkap"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Catatan Kaki Default (Terima kasih, dsb)
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none italic h-24"
+                  value={storeInfo.defaultNotes}
+                  onChange={(e) => setStoreInfo({ ...storeInfo, defaultNotes: e.target.value })}
+                  placeholder="Catatan di bawah struk"
+                />
+              </div>
+              
+              <div className="pt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                     showMsg("Profil toko berhasil disimpan!");
+                     setView("list");
+                  }}
+                  className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                >
+                  <Save size={16} /> SIMPAN PERUBAHAN
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {view === "items" && (
           /* --- DATABASE BARANG --- */
           <div className="animate-in fade-in">
