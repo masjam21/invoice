@@ -13,6 +13,7 @@ import {
   Package,
   X,
   Edit,
+  BarChart3,
 } from "lucide-react";
 
 /**
@@ -163,8 +164,8 @@ export default function App() {
   };
 
   const saveItem = (item) => {
-    if (!item.name || !item.price || item.stock === undefined) {
-      showMsg("Nama, harga, dan stok harus diisi!", "error");
+    if (!item.name || !item.price || item.buyingPrice === undefined || item.stock === undefined) {
+      showMsg("Semua kolom harus diisi!", "error");
       return;
     }
     const newItemList = [...items];
@@ -255,6 +256,12 @@ export default function App() {
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'items' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <Package size={14} /> <span className="hidden sm:inline">Barang</span>
+          </button>
+          <button 
+            onClick={() => setView("reports")}
+            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'reports' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            <BarChart3 size={14} /> <span className="hidden sm:inline">Laporan</span>
           </button>
           <button 
             onClick={() => setView("settings")}
@@ -436,7 +443,7 @@ export default function App() {
                 </div>
               </div>
               <button
-                onClick={() => setEditingItem({ name: "", price: 0, stock: 0 })}
+                onClick={() => setEditingItem({ name: "", price: 0, buyingPrice: 0, stock: 0 })}
                 className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
               >
                 <Plus size={18} /> Tambah Barang Baru
@@ -462,15 +469,27 @@ export default function App() {
                         autoFocus
                       />
                     </div>
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Harga Satuan (Rp)</label>
-                      <input
-                        type="number"
-                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
-                        value={editingItem.price}
-                        onChange={(e) => setEditingItem({ ...editingItem, price: parseInt(e.target.value) || 0 })}
-                        placeholder="0"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Harga Beli (Rp)</label>
+                        <input
+                          type="number"
+                          className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                          value={editingItem.buyingPrice}
+                          onChange={(e) => setEditingItem({ ...editingItem, buyingPrice: parseInt(e.target.value) || 0 })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Harga Jual (Rp)</label>
+                        <input
+                          type="number"
+                          className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                          value={editingItem.price}
+                          onChange={(e) => setEditingItem({ ...editingItem, price: parseInt(e.target.value) || 0 })}
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Jumlah Stok</label>
@@ -543,11 +562,17 @@ export default function App() {
                       </h4>
                     </div>
                     <div className="pt-4 border-t border-slate-50 flex justify-between items-end">
-                      <div className="text-xl font-black tracking-tighter italic text-blue-600">
-                        Rp {item.price.toLocaleString("id-ID")}
+                      <div>
+                        <p className="text-[8px] font-black text-slate-300 uppercase leading-none mb-1">Jual @ Rp {item.price.toLocaleString("id-ID")}</p>
+                        <div className="text-xl font-black tracking-tighter italic text-blue-600 leading-none">
+                          Rp {item.price.toLocaleString("id-ID")}
+                        </div>
                       </div>
-                      <div className="text-[10px] font-black uppercase bg-slate-100 px-2 py-1 rounded text-slate-500">
-                        Stok: {item.stock || 0}
+                      <div className="text-right">
+                        <p className="text-[8px] font-black text-slate-300 uppercase leading-none mb-1 text-right">Beli: {item.buyingPrice?.toLocaleString("id-ID") || 0}</p>
+                        <div className="text-[10px] font-black uppercase bg-slate-100 px-2 py-1 rounded text-slate-500">
+                          Stok: {item.stock || 0}
+                        </div>
                       </div>
                     </div>
                   </div>
