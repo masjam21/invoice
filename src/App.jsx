@@ -35,6 +35,7 @@ export default function App() {
   const [itemSearchTerm, setItemSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [showItemSelector, setShowItemSelector] = useState(null);
+  const [reportTab, setReportTab] = useState("stock"); // 'stock' | 'sold' | 'profit'
   const [printMode, setPrintMode] = useState("thermal");
 
   // State untuk Info Toko
@@ -363,60 +364,164 @@ export default function App() {
           </div>
         )}
         
-        {view === "settings" && (
-          /* --- PENGATURAN TOKO --- */
-          <div className="animate-in fade-in max-w-2xl mx-auto">
-            <h2 className="text-4xl font-black uppercase tracking-tighter mb-8 italic">
-              Profil Toko
+        {view === "reports" && (
+          /* --- MENU LAPORAN --- */
+          <div className="animate-in fade-in">
+            <h2 className="text-5xl font-black uppercase tracking-tighter mb-8 italic">
+              Laporan Bisnis
             </h2>
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-6">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                  Nama Toko
-                </label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold uppercase"
-                  value={storeInfo.name}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, name: e.target.value })}
-                  placeholder="Masukkan nama toko"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                  Alamat Toko
-                </label>
-                <textarea
-                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none h-24"
-                  value={storeInfo.address}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, address: e.target.value })}
-                  placeholder="Masukkan alamat lengkap"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                  Catatan Kaki Default (Terima kasih, dsb)
-                </label>
-                <textarea
-                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold resize-none italic h-24"
-                  value={storeInfo.defaultNotes}
-                  onChange={(e) => setStoreInfo({ ...storeInfo, defaultNotes: e.target.value })}
-                  placeholder="Catatan di bawah struk"
-                />
-              </div>
-              
-              <div className="pt-4 flex justify-end">
+            
+            <div className="flex flex-wrap gap-2 mb-8 no-print">
+              {[
+                { id: 'stock', label: 'Stok Tersedia' },
+                { id: 'sold', label: 'Barang Terjual' },
+                { id: 'profit', label: 'Laba Rugi' }
+              ].map(tab => (
                 <button
-                  onClick={() => {
-                     showMsg("Profil toko berhasil disimpan!");
-                     setView("list");
-                  }}
-                  className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                  key={tab.id}
+                  onClick={() => setReportTab(tab.id)}
+                  className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${reportTab === tab.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-200 hover:bg-slate-50'}`}
                 >
-                  <Save size={16} /> SIMPAN PERUBAHAN
+                  {tab.label}
                 </button>
-              </div>
+              ))}
             </div>
+
+            {reportTab === 'stock' && (
+              /* --- LAPORAN STOK TERSEDIA --- */
+              <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Barang</th>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Harga Beli</th>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Harga Jual</th>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Stok</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {items.map(item => (
+                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-6 font-black uppercase text-sm tracking-tight">{item.name}</td>
+                        <td className="p-6 text-right font-bold text-slate-500">Rp {item.buyingPrice?.toLocaleString("id-ID") || 0}</td>
+                        <td className="p-6 text-right font-bold text-blue-600">Rp {item.price.toLocaleString("id-ID")}</td>
+                        <td className={`p-6 text-right font-black ${item.stock <= 5 ? 'text-red-500' : 'text-slate-900'}`}>{item.stock || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {reportTab === 'sold' && (
+              /* --- LAPORAN BARANG TERJUAL --- */
+              <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Barang</th>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Total Terjual</th>
+                      <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Total Pendapatan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {Array.from(
+                      invoices.reduce((acc, inv) => {
+                        inv.items.forEach(item => {
+                          const existing = acc.get(item.description) || { qty: 0, total: 0 };
+                          acc.set(item.description, {
+                            qty: existing.qty + item.qty,
+                            total: existing.total + (item.qty * item.price)
+                          });
+                        });
+                        return acc;
+                      }, new Map()).entries()
+                    ).map(([name, data]) => (
+                      <tr key={name} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-6 font-black uppercase text-sm tracking-tight">{name}</td>
+                        <td className="p-6 text-right font-black text-slate-900">{data.qty}</td>
+                        <td className="p-6 text-right font-bold text-blue-600">Rp {data.total.toLocaleString("id-ID")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {reportTab === 'profit' && (
+              /* --- LAPORAN LABA RUGI --- */
+              <div className="space-y-6 animate-in fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {(() => {
+                    let totalRevenue = 0;
+                    let totalCost = 0;
+                    invoices.forEach(inv => {
+                      inv.items.forEach(item => {
+                        totalRevenue += item.qty * item.price;
+                        // Find item in DB to get buying price
+                        const dbItem = items.find(i => i.name === item.description);
+                        if (dbItem) {
+                          totalCost += item.qty * (dbItem.buyingPrice || 0);
+                        }
+                      });
+                    });
+                    const profit = totalRevenue - totalCost;
+
+                    return (
+                      <>
+                        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Total Pendapatan</p>
+                          <div className="text-3xl font-black tracking-tighter italic">Rp {totalRevenue.toLocaleString("id-ID")}</div>
+                        </div>
+                        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Total Modal (HPP)</p>
+                          <div className="text-3xl font-black tracking-tighter italic text-slate-400">Rp {totalCost.toLocaleString("id-ID")}</div>
+                        </div>
+                        <div className={`p-8 rounded-[2rem] border shadow-lg ${profit >= 0 ? 'bg-blue-600 border-blue-600 text-white' : 'bg-red-600 border-red-600 text-white'}`}>
+                          <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-4">Laba Bersih</p>
+                          <div className="text-4xl font-black tracking-tighter italic">Rp {profit.toLocaleString("id-ID")}</div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                  <h4 className="text-sm font-black uppercase tracking-widest mb-6">Detail Margin per Invoice</h4>
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="pb-4 text-[9px] font-black uppercase text-slate-400">ID Transaksi</th>
+                        <th className="pb-4 text-[9px] font-black uppercase text-slate-400">Pelanggan</th>
+                        <th className="pb-4 text-right text-[9px] font-black uppercase text-slate-400">Revenue</th>
+                        <th className="pb-4 text-right text-[9px] font-black uppercase text-slate-400">Modal</th>
+                        <th className="pb-4 text-right text-[9px] font-black uppercase text-slate-400">Laba</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 italic">
+                      {invoices.map(inv => {
+                        let rev = 0;
+                        let cost = 0;
+                        inv.items.forEach(it => {
+                          rev += it.qty * it.price;
+                          const dbIt = items.find(i => i.name === it.description);
+                          if (dbIt) { cost += it.qty * (dbIt.buyingPrice || 0); }
+                        });
+                        return (
+                          <tr key={inv.id}>
+                            <td className="py-4 text-xs font-black">{inv.id}</td>
+                            <td className="py-4 text-xs font-bold text-slate-400">{inv.clientName || 'PELANGGAN UMUM'}</td>
+                            <td className="py-4 text-right text-xs font-bold">Rp {rev.toLocaleString("id-ID")}</td>
+                            <td className="py-4 text-right text-xs font-bold text-slate-400">Rp {cost.toLocaleString("id-ID")}</td>
+                            <td className={`py-4 text-right text-xs font-black ${rev - cost >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Rp {(rev - cost).toLocaleString("id-ID")}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
