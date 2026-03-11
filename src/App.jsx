@@ -118,6 +118,10 @@ export default function App() {
 
   const saveInvoice = () => {
     if (!currentInvoice) return;
+    
+    // Check if it's a new invoice
+    const isNew = !invoices.some(inv => inv.id === currentInvoice.id);
+
     const existingIndex = invoices.findIndex(
       (inv) => inv.id === currentInvoice.id,
     );
@@ -134,7 +138,20 @@ export default function App() {
       ];
     }
     setInvoices(updated);
-    showMsg("Tersimpan!");
+
+    // Update Stock if it's a new transaction
+    if (isNew) {
+      const updatedItems = items.map(dbItem => {
+        const invItem = currentInvoice.items.find(it => it.description === dbItem.name);
+        if (invItem) {
+          return { ...dbItem, stock: (dbItem.stock || 0) - invItem.qty };
+        }
+        return dbItem;
+      });
+      setItems(updatedItems);
+    }
+
+    showMsg(isNew ? "Transaksi Baru & Stok Diperbarui!" : "Tersimpan!");
     setView("list");
   };
 
@@ -146,8 +163,8 @@ export default function App() {
   };
 
   const saveItem = (item) => {
-    if (!item.name || !item.price) {
-      showMsg("Nama dan harga harus diisi!", "error");
+    if (!item.name || !item.price || item.stock === undefined) {
+      showMsg("Nama, harga, dan stok harus diisi!", "error");
       return;
     }
     const newItemList = [...items];
@@ -419,7 +436,7 @@ export default function App() {
                 </div>
               </div>
               <button
-                onClick={() => setEditingItem({ name: "", price: 0 })}
+                onClick={() => setEditingItem({ name: "", price: 0, stock: 0 })}
                 className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
               >
                 <Plus size={18} /> Tambah Barang Baru
@@ -452,6 +469,16 @@ export default function App() {
                         className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
                         value={editingItem.price}
                         onChange={(e) => setEditingItem({ ...editingItem, price: parseInt(e.target.value) || 0 })}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Jumlah Stok</label>
+                      <input
+                        type="number"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.stock}
+                        onChange={(e) => setEditingItem({ ...editingItem, stock: parseInt(e.target.value) || 0 })}
                         placeholder="0"
                       />
                     </div>
@@ -515,9 +542,12 @@ export default function App() {
                         {item.name}
                       </h4>
                     </div>
-                    <div className="pt-4 border-t border-slate-50">
+                    <div className="pt-4 border-t border-slate-50 flex justify-between items-end">
                       <div className="text-xl font-black tracking-tighter italic text-blue-600">
                         Rp {item.price.toLocaleString("id-ID")}
+                      </div>
+                      <div className="text-[10px] font-black uppercase bg-slate-100 px-2 py-1 rounded text-slate-500">
+                        Stok: {item.stock || 0}
                       </div>
                     </div>
                   </div>
@@ -615,7 +645,10 @@ export default function App() {
                            >
                              <div>
                                <div className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600">{dbItem.name}</div>
-                               <div className="text-[10px] font-bold text-slate-400">Rp {dbItem.price.toLocaleString("id-ID")}</div>
+                               <div className="text-[10px] font-bold text-slate-400 flex gap-2">
+                                 <span>Rp {dbItem.price.toLocaleString("id-ID")}</span>
+                                 <span className="text-blue-600">Stok: {dbItem.stock || 0}</span>
+                               </div>
                              </div>
                              <Plus size={16} className="text-slate-200 group-hover:text-blue-600" />
                            </button>
