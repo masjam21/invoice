@@ -1440,7 +1440,7 @@ export default function App() {
             width: 58mm !important; 
             max-width: 58mm !important; 
             margin: 0 !important; 
-            padding: 0 2.5mm 0 0.5mm !important; /* Geser ke kiri: kanan 2.5, kiri 0.5 */
+            padding: 0 1mm 0 0.5mm !important; /* Kiri 0.5mm, Kanan 1mm */
             box-shadow: none !important;
             border: none !important;
             font-family: 'Courier New', monospace !important;
