@@ -1389,7 +1389,7 @@ export default function App() {
               <div className="text-center text-[10px] print:text-[8px] space-y-4 print:space-y-2 mt-8 print:mt-4">
                 <div className="border-t border-dashed border-slate-300 pt-4 print:pt-2 print:border-black"></div>
                 <textarea
-                  className="w-full text-center outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print"
+                  className="w-full text-left outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print"
                   value={currentInvoice?.notes}
                   placeholder="Isi catatan..."
                   onChange={(e) =>
@@ -1399,7 +1399,7 @@ export default function App() {
                     })
                   }
                 />
-                <div className="hidden print:block text-center italic font-bold text-[8px] mb-4 print:mb-2 leading-tight">
+                <div className="hidden print:block text-left italic font-bold text-[8px] mb-4 print:mb-2 leading-tight">
                   {currentInvoice?.notes}
                 </div>
                 <div className="uppercase font-black tracking-[0.3em] print:tracking-widest text-slate-300 print:text-black py-2 print:py-1">
