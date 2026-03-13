@@ -1389,7 +1389,7 @@ export default function App() {
               <div className="text-center text-[10px] print:text-[8px] space-y-4 print:space-y-2 mt-8 print:mt-4">
                 <div className="border-t border-dashed border-slate-300 pt-4 print:pt-2 print:border-black"></div>
                 <textarea
-                  className="w-full text-left outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print text-align-left  "
+                  className="w-full text-left outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print"
                   value={currentInvoice?.notes}
                   placeholder="Isi catatan..."
                   onChange={(e) =>
@@ -1435,12 +1435,12 @@ export default function App() {
           
           ${printMode === "thermal"
               ? `
-          /* THERMAL 58mm (Max Content Area 55mm) */
+          /* THERMAL 58mm (Balanced Margins) */
           .receipt-paper { 
             width: 58mm !important; 
             max-width: 58mm !important; 
             margin: 0 !important; 
-            padding: 0 1.5mm !important; /* Margin aman 1.5mm kanan-kiri */
+            padding: 0 2.5mm 0 0.5mm !important; /* Geser ke kiri: kanan 2.5, kiri 0.5 */
             box-shadow: none !important;
             border: none !important;
             font-family: 'Courier New', monospace !important;
