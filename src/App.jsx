@@ -1435,15 +1435,16 @@ export default function App() {
           
           ${printMode === "thermal"
               ? `
-          /* THERMAL 58mm */
+          /* THERMAL 58mm (Max Content Area 55mm) */
           .receipt-paper { 
             width: 58mm !important; 
             max-width: 58mm !important; 
             margin: 0 !important; 
-            padding: 0 !important;
+            padding: 0 1.5mm !important; /* Margin aman 1.5mm kanan-kiri */
             box-shadow: none !important;
             border: none !important;
             font-family: 'Courier New', monospace !important;
+            box-sizing: border-box !important;
           }
           @page { margin: 0; size: 58mm auto; }
           `
