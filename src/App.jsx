@@ -91,53 +91,34 @@ export default function App() {
       try {
         setUsers(JSON.parse(savedUsers));
       } catch (e) {
-        console.error("Gagal memuat data user");
+        console.error("Gagal memuat data dari server", e);
+        showMsg("Gagal terhubung ke server!", "error");
+      } finally {
+        setLoading(false);
       }
-    } else {
-      // Default Admin
-      const defaultAdmin = [{ id: Date.now(), username: "admin", password: "123", role: "admin", name: "Admin Utama" }];
-      setUsers(defaultAdmin);
-      localStorage.setItem("kasir_pro_users", JSON.stringify(defaultAdmin));
-    }
+    };
 
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
+    fetchData();
   }, []);
 
-  // Simpan data otomatis
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("kasir_pro_v3_final", JSON.stringify(invoices));
-    }
-  }, [invoices, loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("kasir_pro_store_info", JSON.stringify(storeInfo));
-    }
-  }, [storeInfo, loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("kasir_pro_items", JSON.stringify(items));
-    }
-  }, [items, loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("kasir_pro_users", JSON.stringify(users));
-    }
-  }, [users, loading]);
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const user = users.find(u => u.username === loginForm.username && u.password === loginForm.password);
-    if (user) {
-      setCurrentUser(user);
-      setShowLogin(false);
-      showMsg(`Selamat Datang, ${user.name}!`);
-    } else {
-      showMsg("Username atau Password salah!", "error");
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm)
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setCurrentUser(user);
+        setShowLogin(false);
+        showMsg(`Selamat Datang, ${user.name}!`);
+      } else {
+        showMsg("Username atau Password salah!", "error");
+      }
+    } catch (e) {
+      showMsg("Gagal login, periksa koneksi!", "error");
     }
   };
 
@@ -151,26 +132,28 @@ export default function App() {
     }
   };
 
-  const saveUser = (user) => {
+  const saveUser = async (user) => {
     if (!user.username || !user.password || !user.name || !user.role) {
       showMsg("Semua kolom harus diisi!", "error");
       return;
     }
-    const newUserList = [...users];
-    const index = newUserList.findIndex(u => u.id === user.id);
-    if (index >= 0) {
-      newUserList[index] = user;
-      showMsg("User diperbarui!");
-    } else {
-      if (users.some(u => u.username === user.username)) {
-        showMsg("Username sudah digunakan!", "error");
-        return;
+    try {
+      const method = user.id ? 'PUT' : 'POST';
+      const url = user.id ? `${API_URL}/users/${user.id}` : `${API_URL}/users`;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+      if (res.ok) {
+        const updatedUsers = await fetch(`${API_URL}/users`).then(r => r.json());
+        setUsers(updatedUsers);
+        setEditingItem(null);
+        showMsg(user.id ? "User diperbarui!" : "User ditambah!");
       }
-      newUserList.unshift({ ...user, id: Date.now() });
-      showMsg("User ditambah!");
+    } catch (e) {
+      showMsg("Gagal menyimpan user!", "error");
     }
-    setUsers(newUserList);
-    setEditingItem(null);
   };
 
   const showMsg = (text, type = "success") => {
@@ -195,74 +178,101 @@ export default function App() {
     setView("editor");
   };
 
-  const saveInvoice = () => {
+  const saveInvoice = async () => {
     if (!currentInvoice) return;
-
-    // Check if it's a new invoice
-    const isNew = !invoices.some(inv => inv.id === currentInvoice.id);
-
-    const existingIndex = invoices.findIndex(
-      (inv) => inv.id === currentInvoice.id,
-    );
-    let updated = [...invoices];
-    if (existingIndex >= 0) {
-      updated[existingIndex] = {
-        ...currentInvoice,
-        updatedAt: new Date().toISOString(),
-      };
-    } else {
-      updated = [
-        { ...currentInvoice, updatedAt: new Date().toISOString() },
-        ...updated,
-      ];
-    }
-    setInvoices(updated);
-
-    // Update Stock if it's a new transaction
-    if (isNew) {
-      const updatedItems = items.map(dbItem => {
-        const invItem = currentInvoice.items.find(it => it.description === dbItem.name);
-        if (invItem) {
-          return { ...dbItem, stock: (dbItem.stock || 0) - invItem.qty };
-        }
-        return dbItem;
+    try {
+      const isNew = !invoices.some(inv => inv.id === currentInvoice.id);
+      const method = isNew ? 'POST' : 'PUT';
+      const url = isNew ? `${API_URL}/invoices` : `${API_URL}/invoices/${currentInvoice.id}`;
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...currentInvoice,
+          updatedAt: new Date().toISOString()
+        })
       });
-      setItems(updatedItems);
-    }
 
-    showMsg(isNew ? "Transaksi Baru & Stok Diperbarui!" : "Tersimpan!");
-    setView("list");
+      if (res.ok) {
+        // Update Stock if it's a new transaction
+        if (isNew) {
+          for (const invItem of currentInvoice.items) {
+            const dbItem = items.find(it => it.name === invItem.description);
+            if (dbItem) {
+              const newStock = (dbItem.stock || 0) - invItem.qty;
+              await fetch(`${API_URL}/items/${dbItem.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...dbItem, stock: newStock })
+              });
+            }
+          }
+        }
+
+        const [newInv, newItems] = await Promise.all([
+          fetch(`${API_URL}/invoices`).then(r => r.json()),
+          fetch(`${API_URL}/items`).then(r => r.json())
+        ]);
+        setInvoices(newInv);
+        setItems(newItems);
+        showMsg(isNew ? "Transaksi Baru & Stok Diperbarui!" : "Tersimpan!");
+        setView("list");
+      }
+    } catch (e) {
+      showMsg("Gagal menyimpan transaksi!", "error");
+    }
   };
 
-  const deleteInvoice = (id) => {
+  const deleteInvoice = async (id) => {
     if (window.confirm("Hapus struk ini?")) {
-      setInvoices(invoices.filter((inv) => inv.id !== id));
-      showMsg("Dihapus", "error");
+      try {
+        const res = await fetch(`${API_URL}/invoices/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setInvoices(invoices.filter((inv) => inv.id !== id));
+          showMsg("Dihapus", "error");
+        }
+      } catch (e) {
+        showMsg("Gagal menghapus!", "error");
+      }
     }
   };
 
-  const saveItem = (item) => {
+  const saveItem = async (item) => {
     if (!item.name || !item.price || item.buyingPrice === undefined || item.stock === undefined) {
       showMsg("Semua kolom harus diisi!", "error");
       return;
     }
-    const newItemList = [...items];
-    const index = newItemList.findIndex(i => i.id === item.id);
-    if (index >= 0) {
-      newItemList[index] = item;
-      showMsg("Barang diperbarui!");
-    } else {
-      newItemList.unshift({ ...item, id: Date.now() });
-      showMsg("Barang ditambah!");
+    try {
+      const method = item.id ? 'PUT' : 'POST';
+      const url = item.id ? `${API_URL}/items/${item.id}` : `${API_URL}/items`;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      });
+      if (res.ok) {
+        const updatedItems = await fetch(`${API_URL}/items`).then(r => r.json());
+        setItems(updatedItems);
+        setEditingItem(null);
+        showMsg(item.id ? "Barang diperbarui!" : "Barang ditambah!");
+      }
+    } catch (e) {
+      showMsg("Gagal menyimpan barang!", "error");
     }
-    setItems(newItemList);
-    setEditingItem(null);
   };
 
-  const deleteItem = (id) => {
+  const deleteItem = async (id) => {
     if (window.confirm("Hapus barang ini dari database?")) {
-      setItems(items.filter(i => i.id !== id));
-      showMsg("Barang dihapus", "error");
+      try {
+        const res = await fetch(`${API_URL}/items/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setItems(items.filter(i => i.id !== id));
+          showMsg("Barang dihapus", "error");
+        }
+      } catch (e) {
+        showMsg("Gagal menghapus!", "error");
+      }
     }
   };
 
