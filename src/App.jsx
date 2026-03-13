@@ -14,6 +14,10 @@ import {
   X,
   Edit,
   BarChart3,
+  UserPlus,
+  Users,
+  LogOut,
+  Key,
 } from "lucide-react";
 
 /**
@@ -39,6 +43,12 @@ export default function App() {
   const [autocomplete, setAutocomplete] = useState({ id: null, query: "" });
   const [printMode, setPrintMode] = useState("thermal");
 
+  // State untuk Auth
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [showLogin, setShowLogin] = useState(true);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+
   // State untuk Info Toko
   const [storeInfo, setStoreInfo] = useState({
     name: "USAHA ANDA",
@@ -51,6 +61,7 @@ export default function App() {
     const savedData = localStorage.getItem("kasir_pro_v3_final");
     const savedStore = localStorage.getItem("kasir_pro_store_info");
     const savedItems = localStorage.getItem("kasir_pro_items");
+    const savedUsers = localStorage.getItem("kasir_pro_users");
     
     if (savedData) {
       try {
@@ -74,6 +85,19 @@ export default function App() {
       } catch (e) {
         console.error("Gagal memuat profil toko");
       }
+    }
+
+    if (savedUsers) {
+      try {
+        setUsers(JSON.parse(savedUsers));
+      } catch (e) {
+        console.error("Gagal memuat data user");
+      }
+    } else {
+      // Default Admin
+      const defaultAdmin = [{ id: Date.now(), username: "admin", password: "123", role: "admin", name: "Admin Utama" }];
+      setUsers(defaultAdmin);
+      localStorage.setItem("kasir_pro_users", JSON.stringify(defaultAdmin));
     }
     
     const timer = setTimeout(() => setLoading(false), 500);
@@ -99,7 +123,55 @@ export default function App() {
     }
   }, [items, loading]);
 
-  const showMsg = (text, type = "success") => {
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem("kasir_pro_users", JSON.stringify(users));
+    }
+  }, [users, loading]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = users.find(u => u.username === loginForm.username && u.password === loginForm.password);
+    if (user) {
+      setCurrentUser(user);
+      setShowLogin(false);
+      showMsg(`Selamat Datang, ${user.name}!`);
+    } else {
+      showMsg("Username atau Password salah!", "error");
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm("Keluar dari aplikasi?")) {
+      setCurrentUser(null);
+      setShowLogin(true);
+      setLoginForm({ username: "", password: "" });
+      setView("list");
+      showMsg("Berhasil keluar.");
+    }
+  };
+
+  const saveUser = (user) => {
+    if (!user.username || !user.password || !user.name || !user.role) {
+      showMsg("Semua kolom harus diisi!", "error");
+      return;
+    }
+    const newUserList = [...users];
+    const index = newUserList.findIndex(u => u.id === user.id);
+    if (index >= 0) {
+      newUserList[index] = user;
+      showMsg("User diperbarui!");
+    } else {
+      if (users.some(u => u.username === user.username)) {
+        showMsg("Username sudah digunakan!", "error");
+        return;
+      }
+      newUserList.unshift({ ...user, id: Date.now() });
+      showMsg("User ditambah!");
+    }
+    setUsers(newUserList);
+    setEditingItem(null); // Reuse editingItem logic for users if needed, or create setEditingUser
+  };
     setMessage({ text: String(text), type });
     setTimeout(() => setMessage(null), 3000);
   };
@@ -224,6 +296,64 @@ export default function App() {
     );
   }
 
+  if (showLogin || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans p-6">
+        <div className="max-w-md w-full bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-100">
+          <div className="text-center mb-10">
+            <div className="bg-black w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white mx-auto mb-6 shadow-xl">
+              <Key size={32} />
+            </div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+              KASIR<span className="text-blue-600">PRO</span>
+            </h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">
+              Sistem Manajemen Inventori
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-2">
+                Username
+              </label>
+              <input
+                type="text"
+                required
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                value={loginForm.username}
+                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                placeholder="Masukkan username"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-2">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-5 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+            >
+              MASUK KE SISTEM
+            </button>
+          </form>
+          <p className="text-center text-[9px] text-slate-300 mt-8 font-bold uppercase tracking-widest">
+            V3.0 &bull; SECURITY PROTECTED
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen bg-slate-50 text-slate-900 print:bg-white font-sans selection:bg-blue-600 selection:text-white"
@@ -270,6 +400,20 @@ export default function App() {
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'settings' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <Settings size={14} /> <span className="hidden sm:inline">Toko</span>
+          </button>
+          {currentUser?.role === 'admin' && (
+            <button 
+              onClick={() => setView("users")}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'users' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              <Users size={14} /> <span className="hidden sm:inline">Admin/User</span>
+            </button>
+          )}
+          <button 
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+          >
+            <LogOut size={14} /> <span className="hidden sm:inline">Keluar</span>
           </button>
         </div>
       </nav>
@@ -579,6 +723,152 @@ export default function App() {
                   <Save size={16} /> SIMPAN PERUBAHAN
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {view === "users" && currentUser?.role === 'admin' && (
+          /* --- MANAJEMEN USER --- */
+          <div className="animate-in fade-in">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+              <div className="w-full md:w-auto">
+                <h2 className="text-5xl font-black uppercase tracking-tighter mb-6 italic">
+                  Manajemen User
+                </h2>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Total {users.length} Pengguna Terdaftar
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingItem({ username: "", password: "", role: "user", name: "" })}
+                className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+              >
+                <UserPlus size={18} /> Tambah User Baru
+              </button>
+            </div>
+
+            {editingItem && editingItem.role && (
+              /* Modal Form User */
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-6 italic">
+                    {editingItem.id ? 'Edit User' : 'Tambah User'}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Nama Lengkap</label>
+                      <input
+                        type="text"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.name}
+                        onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                        placeholder="Contoh: Ahmad Kasir"
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Username</label>
+                      <input
+                        type="text"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.username}
+                        onChange={(e) => setEditingItem({ ...editingItem, username: e.target.value.toLowerCase() })}
+                        placeholder="username_baru"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Password</label>
+                      <input
+                        type="password"
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.password}
+                        onChange={(e) => setEditingItem({ ...editingItem, password: e.target.value })}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Role/Akses</label>
+                      <select
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all font-bold"
+                        value={editingItem.role}
+                        onChange={(e) => setEditingItem({ ...editingItem, role: e.target.value })}
+                      >
+                        <option value="user">USER (Biasa)</option>
+                        <option value="admin">ADMIN (Penuh)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-8">
+                    <button
+                      onClick={() => setEditingItem(null)}
+                      className="flex-1 px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={() => {
+                        saveUser(editingItem);
+                        setEditingItem(null);
+                      }}
+                      className="flex-1 bg-black text-white px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg"
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {users.map((u) => (
+                <div
+                  key={u.id}
+                  className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-40 group relative"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest ${u.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                        {u.role}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditingItem(u)}
+                          className="text-slate-300 hover:text-blue-600 transition-all p-1"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        {u.username !== 'admin' && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Hapus user ${u.name}?`)) {
+                                setUsers(users.filter(usr => usr.id !== u.id));
+                                showMsg("User dihapus", "error");
+                              }
+                            }}
+                            className="text-slate-300 hover:text-red-500 transition-all p-1"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <h4 className="font-black text-lg uppercase tracking-tighter truncate leading-tight">
+                      {u.name}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 italic lowercase">
+                      @{u.username}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-50 flex justify-between items-center">
+                    <div className="text-[9px] font-black text-slate-300 uppercase">
+                      ID: {u.id.toString().slice(-6)}
+                    </div>
+                    <div className="text-[9px] font-black text-slate-300 uppercase">
+                      Pass: ••••
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
