@@ -62,7 +62,7 @@ export default function App() {
     const savedStore = localStorage.getItem("kasir_pro_store_info");
     const savedItems = localStorage.getItem("kasir_pro_items");
     const savedUsers = localStorage.getItem("kasir_pro_users");
-    
+
     if (savedData) {
       try {
         setInvoices(JSON.parse(savedData));
@@ -78,7 +78,7 @@ export default function App() {
         console.error("Gagal memuat data barang");
       }
     }
-    
+
     if (savedStore) {
       try {
         setStoreInfo(JSON.parse(savedStore));
@@ -99,7 +99,7 @@ export default function App() {
       setUsers(defaultAdmin);
       localStorage.setItem("kasir_pro_users", JSON.stringify(defaultAdmin));
     }
-    
+
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -195,7 +195,7 @@ export default function App() {
 
   const saveInvoice = () => {
     if (!currentInvoice) return;
-    
+
     // Check if it's a new invoice
     const isNew = !invoices.some(inv => inv.id === currentInvoice.id);
 
@@ -377,41 +377,41 @@ export default function App() {
             KASIR<span className="text-blue-600">PRO</span>
           </h1>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setView("list")}
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'list' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <History size={14} /> <span className="hidden sm:inline">Riwayat</span>
           </button>
-          <button 
+          <button
             onClick={() => setView("items")}
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'items' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <Package size={14} /> <span className="hidden sm:inline">Barang</span>
           </button>
-          <button 
+          <button
             onClick={() => setView("reports")}
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'reports' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <BarChart3 size={14} /> <span className="hidden sm:inline">Laporan</span>
           </button>
-          <button 
+          <button
             onClick={() => setView("settings")}
             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'settings' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
           >
             <Settings size={14} /> <span className="hidden sm:inline">Toko</span>
           </button>
           {currentUser?.role === 'admin' && (
-            <button 
+            <button
               onClick={() => setView("users")}
               className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${view === 'users' ? 'bg-black text-white' : 'text-slate-400 hover:bg-slate-100'}`}
             >
               <Users size={14} /> <span className="hidden sm:inline">Admin/User</span>
             </button>
           )}
-          <button 
+          <button
             onClick={handleLogout}
             className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
           >
@@ -510,14 +510,14 @@ export default function App() {
             </div>
           </div>
         )}
-        
+
         {view === "reports" && (
           /* --- MENU LAPORAN --- */
           <div className="animate-in fade-in">
             <h2 className="text-5xl font-black uppercase tracking-tighter mb-8 italic">
               Laporan Bisnis
             </h2>
-            
+
             <div className="flex flex-wrap gap-2 mb-8 no-print">
               {[
                 { id: 'stock', label: 'Stok Tersedia' },
@@ -713,12 +713,12 @@ export default function App() {
                   placeholder="Catatan di bawah struk"
                 />
               </div>
-              
+
               <div className="pt-4 flex justify-end">
                 <button
                   onClick={() => {
-                     showMsg("Profil toko berhasil disimpan!");
-                     setView("list");
+                    showMsg("Profil toko berhasil disimpan!");
+                    setView("list");
                   }}
                   className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95"
                 >
@@ -1036,7 +1036,7 @@ export default function App() {
             </div>
           </div>
         )}
-        
+
         {view === "editor" && (
           /* --- EDITOR STRUK --- */
           <div className="animate-in fade-in max-w-xl mx-auto">
@@ -1083,7 +1083,7 @@ export default function App() {
 
             {/* Receipt Container */}
             <div className="receipt-paper bg-white p-8 md:p-12 shadow-2xl border-t-8 border-black mx-auto print:p-0 print:shadow-none print:border-none relative print:mt-0">
-              
+
               {showItemSelector && (
                 /* Modal Pilih Barang dari DB */
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 no-print">
@@ -1092,7 +1092,7 @@ export default function App() {
                       <h3 className="text-2xl font-black uppercase tracking-tighter italic">Pilih Barang</h3>
                       <button onClick={() => setShowItemSelector(null)} className="p-2 hover:bg-slate-100 rounded-full transition-all"><X size={20} /></button>
                     </div>
-                    
+
                     <div className="relative mb-6">
                       <Search className="absolute left-3 top-3 text-slate-300" size={18} />
                       <input
@@ -1106,34 +1106,34 @@ export default function App() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                       {items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).length === 0 ? (
-                         <p className="text-center py-10 text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Barang tidak ditemukan.</p>
-                       ) : (
-                         items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).map(dbItem => (
-                           <button
-                             key={dbItem.id}
-                             onClick={() => {
-                               const updatedItems = currentInvoice.items.map(it => 
-                                 it.id === showItemSelector 
-                                   ? { ...it, description: dbItem.name, price: dbItem.price } 
-                                   : it
-                               );
-                               setCurrentInvoice({ ...currentInvoice, items: updatedItems });
-                               setShowItemSelector(null);
-                             }}
-                             className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-blue-600 hover:bg-blue-50 transition-all group flex justify-between items-center"
-                           >
-                             <div>
-                               <div className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600">{dbItem.name}</div>
-                               <div className="text-[10px] font-bold text-slate-400 flex gap-2">
-                                 <span>Rp {dbItem.price.toLocaleString("id-ID")}</span>
-                                 <span className="text-blue-600">Stok: {dbItem.stock || 0}</span>
-                               </div>
-                             </div>
-                             <Plus size={16} className="text-slate-200 group-hover:text-blue-600" />
-                           </button>
-                         ))
-                       )}
+                      {items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).length === 0 ? (
+                        <p className="text-center py-10 text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Barang tidak ditemukan.</p>
+                      ) : (
+                        items.filter(i => i.name.toLowerCase().includes(itemSearchTerm.toLowerCase())).map(dbItem => (
+                          <button
+                            key={dbItem.id}
+                            onClick={() => {
+                              const updatedItems = currentInvoice.items.map(it =>
+                                it.id === showItemSelector
+                                  ? { ...it, description: dbItem.name, price: dbItem.price }
+                                  : it
+                              );
+                              setCurrentInvoice({ ...currentInvoice, items: updatedItems });
+                              setShowItemSelector(null);
+                            }}
+                            className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-blue-600 hover:bg-blue-50 transition-all group flex justify-between items-center"
+                          >
+                            <div>
+                              <div className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600">{dbItem.name}</div>
+                              <div className="text-[10px] font-bold text-slate-400 flex gap-2">
+                                <span>Rp {dbItem.price.toLocaleString("id-ID")}</span>
+                                <span className="text-blue-600">Stok: {dbItem.stock || 0}</span>
+                              </div>
+                            </div>
+                            <Plus size={16} className="text-slate-200 group-hover:text-blue-600" />
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1235,9 +1235,9 @@ export default function App() {
                                 const updatedItems = currentInvoice.items.map((i) =>
                                   i.id === item.id
                                     ? {
-                                        ...i,
-                                        description: val,
-                                      }
+                                      ...i,
+                                      description: val,
+                                    }
                                     : i,
                                 );
                                 setCurrentInvoice({ ...currentInvoice, items: updatedItems });
@@ -1248,7 +1248,7 @@ export default function App() {
                                 setTimeout(() => setAutocomplete({ id: null, query: "" }), 200);
                               }}
                             />
-                            
+
                             {/* Autocomplete Dropdown */}
                             {autocomplete.id === item.id && autocomplete.query.length > 0 && (
                               <div className="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] no-print overflow-hidden max-h-48 overflow-y-auto">
@@ -1264,9 +1264,9 @@ export default function App() {
                                         className="w-full text-left p-3 hover:bg-slate-50 transition-all border-b border-slate-50 last:border-none flex justify-between items-center"
                                         onMouseDown={(e) => {
                                           e.preventDefault(); // Prevent blur
-                                          const updatedItems = currentInvoice.items.map(it => 
-                                            it.id === item.id 
-                                              ? { ...it, description: dbItem.name, price: dbItem.price } 
+                                          const updatedItems = currentInvoice.items.map(it =>
+                                            it.id === item.id
+                                              ? { ...it, description: dbItem.name, price: dbItem.price }
                                               : it
                                           );
                                           setCurrentInvoice({ ...currentInvoice, items: updatedItems });
@@ -1343,9 +1343,9 @@ export default function App() {
                                 const items = currentInvoice.items.map((i) =>
                                   i.id === item.id
                                     ? {
-                                        ...i,
-                                        price: parseInt(e.target.value) || 0,
-                                      }
+                                      ...i,
+                                      price: parseInt(e.target.value) || 0,
+                                    }
                                     : i,
                                 );
                                 setCurrentInvoice({ ...currentInvoice, items });
@@ -1389,7 +1389,7 @@ export default function App() {
               <div className="text-center text-[10px] print:text-[8px] space-y-4 print:space-y-2 mt-8 print:mt-4">
                 <div className="border-t border-dashed border-slate-300 pt-4 print:pt-2 print:border-black"></div>
                 <textarea
-                  className="w-full text-left outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print"
+                  className="w-full text-left outline-none bg-slate-50 p-4 rounded-xl italic font-bold resize-none leading-tight border-none h-20 no-print text-align-left  "
                   value={currentInvoice?.notes}
                   placeholder="Isi catatan..."
                   onChange={(e) =>
@@ -1433,8 +1433,7 @@ export default function App() {
           .no-print { display: none !important; }
           body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
           
-          ${
-            printMode === "thermal"
+          ${printMode === "thermal"
               ? `
           /* THERMAL 58mm */
           .receipt-paper { 
@@ -1460,7 +1459,7 @@ export default function App() {
           }
           @page { margin: 0; size: A5 portrait; }
           `
-          }
+            }
 
           * { color: black !important; border-color: black !important; }
         }
