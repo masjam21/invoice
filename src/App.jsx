@@ -187,6 +187,8 @@ export default function App() {
       companyAddress: storeInfo.address,
       items: [{ id: Date.now(), description: "", qty: 1, price: 0 }],
       notes: storeInfo.defaultNotes,
+      createdBy: currentUser.username, // Lacak pembuat
+      creatorName: currentUser.name,   // Nama lengkap pembuat
       updatedAt: new Date().toISOString(),
     };
     setCurrentInvoice(newInv);
@@ -486,6 +488,11 @@ export default function App() {
                       <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">
                         {inv.date}
                       </p>
+                      {inv.creatorName && (
+                        <div className="mt-2 flex items-center gap-1 text-[9px] font-bold text-blue-600 uppercase">
+                          <Users size={10} /> {inv.creatorName}
+                        </div>
+                      )}
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-50">
                       <div className="text-xl font-black tracking-tighter italic">
