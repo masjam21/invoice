@@ -170,8 +170,10 @@ export default function App() {
       showMsg("User ditambah!");
     }
     setUsers(newUserList);
-    setEditingItem(null); // Reuse editingItem logic for users if needed, or create setEditingUser
+    setEditingItem(null);
   };
+
+  const showMsg = (text, type = "success") => {
     setMessage({ text: String(text), type });
     setTimeout(() => setMessage(null), 3000);
   };
