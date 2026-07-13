@@ -28,6 +28,8 @@ import {
  * =========================================================================
  */
 
+const API_URL = "http://localhost:5000/api";
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
@@ -56,40 +58,61 @@ export default function App() {
     defaultNotes: "Terima kasih atas kunjungan Anda!",
   });
 
-  // Muat data lokal
+  // Muat data dari Backend
   useEffect(() => {
-    const savedData = localStorage.getItem("kasir_pro_v3_final");
-    const savedStore = localStorage.getItem("kasir_pro_store_info");
-    const savedItems = localStorage.getItem("kasir_pro_items");
-    const savedUsers = localStorage.getItem("kasir_pro_users");
-
-    if (savedData) {
+    const fetchData = async () => {
       try {
-        setInvoices(JSON.parse(savedData));
-      } catch (e) {
-        console.error("Gagal memuat data struk");
-      }
-    }
+        const [invRes, itemRes, storeRes, userRes] = await Promise.all([
+          fetch(`${API_URL}/invoices`),
+          fetch(`${API_URL}/items`),
+          fetch(`${API_URL}/store_info`),
+          fetch(`${API_URL}/users`)
+        ]);
 
-    if (savedItems) {
-      try {
-        setItems(JSON.parse(savedItems));
-      } catch (e) {
-        console.error("Gagal memuat data barang");
-      }
-    }
+        const invData = await invRes.json();
+        const itemData = await itemRes.json();
+        const storeData = await storeRes.json();
+        const userData = await userRes.json();
 
-    if (savedStore) {
-      try {
-        setStoreInfo(JSON.parse(savedStore));
-      } catch (e) {
-        console.error("Gagal memuat profil toko");
-      }
-    }
+        setInvoices(invData);
+        setItems(itemData);
+        setStoreInfo(storeData);
+        setUsers(userData);
 
-    if (savedUsers) {
-      try {
-        setUsers(JSON.parse(savedUsers));
+        // Migrasi dari LocalStorage jika ada (Satu kali jalan)
+        const oldInvoices = localStorage.getItem("kasir_pro_v3_final");
+        const oldItems = localStorage.getItem("kasir_pro_items");
+        if ((oldInvoices || oldItems) && invData.length === 0 && itemData.length === 0) {
+           console.log("Migrating local data to SQLite...");
+           if (oldInvoices) {
+             const parsed = JSON.parse(oldInvoices);
+             for (const inv of parsed) {
+               await fetch(`${API_URL}/invoices`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(inv)
+               });
+             }
+           }
+           if (oldItems) {
+             const parsed = JSON.parse(oldItems);
+             for (const item of parsed) {
+               await fetch(`${API_URL}/items`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(item)
+               });
+             }
+           }
+           // Bersihkan localStorage setelah migrasi
+           localStorage.removeItem("kasir_pro_v3_final");
+           localStorage.removeItem("kasir_pro_items");
+           // Reload data
+           const newInv = await fetch(`${API_URL}/invoices`).then(r => r.json());
+           const newItems = await fetch(`${API_URL}/items`).then(r => r.json());
+           setInvoices(newInv);
+           setItems(newItems);
+        }
       } catch (e) {
         console.error("Gagal memuat data dari server", e);
         showMsg("Gagal terhubung ke server!", "error");
